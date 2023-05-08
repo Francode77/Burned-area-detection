@@ -390,7 +390,39 @@ class Field:
         
         # Set a threshold 
         delta[delta <0]=-1
-                
+        
+        """SAVES AS TIFF GEOTIFF"""
+        
+        # Define some metadata for the output file
+        meta = {
+            'driver': 'GTiff',
+            'dtype': 'float32',
+            'nodata': -1,
+            'width': 512,
+            'height': 512,
+            'count': 1,
+            'crs': 'EPSG:4326',
+            'transform': [1.0, 0.0, 0.0, 0.0, -1.0, 0.0],
+        }
+        output_dir = os.path.join("data","processed") 
+        
+        # Open a new raster file for writing
+        with rasterio.open(f'{output_dir}/{self.batch_nr}_{self.img_nr}.tif', 'w', **meta) as dst:
+        
+            # Write the numpy array to the file
+            dst.write(delta, 1)
+        
+        # Get the truth value mask        
+        mask=self.return_mask()  
+        output_dir = os.path.join("data","processed","truth") 
+        # Open a new raster file for writing
+        with rasterio.open(f'{output_dir}/{self.batch_nr}_{self.img_nr}.tif', 'w', **meta) as dst:
+        
+            # Write the numpy array to the file
+            dst.write(mask, 1)
+        
+        """
+        # SAVES AS TXT FILE 
         # Save the file
         output_dir = os.path.join("data","processed") 
         if not os.path.exists(output_dir):
@@ -400,14 +432,19 @@ class Field:
         # Load the saved txt file
         #delta_loaded = np.loadtxt(f'{output_dir}/{self.batch_nr}_{self.img_nr}.txt')
 
-        # Get the truth value mask        
-        mask=self.return_mask()       
+     
         
         # Save the mask
         output_dir = os.path.join("data","processed","truth") 
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         np.savetxt(f'{output_dir}/{self.batch_nr}_{self.img_nr}.txt', mask)
+        
+        """
+        
+        
+        
+        
         
         # Plot the output
         #self.plot(delta,mask=mask) 
