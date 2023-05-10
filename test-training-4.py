@@ -101,29 +101,38 @@ _, ax = plt.subplots(1,2)
 ax[0].imshow(inputs[0].permute(1,2,0)[:,:,0])
 ax[1].imshow(masks[0])
 
+def predict_for_image(img, mask, device="cuda"):
+    img = img.to(device)
+    mask = mask.to(device).unsqueeze(1)
+    preds = torch.sigmoid(model(img))
+    preds = (preds > 0.5).float()
+
+    num_correct = (preds == mask).sum()
+    num_pixels = torch.numel(preds)
+    dice_score = (2 * (preds * mask).sum()) / (
+            (preds + mask).sum() + 1e-7
+    )
+
+    intersection = (preds * mask).sum()
+    union = (preds + mask).sum() - intersection
+    iou_score = intersection / (union + 1e-7)
+
+    return num_correct, num_pixels, dice_score, iou_score
 
 def check_accuracy(loader, model, device="cuda"):
     num_correct = 0
-    num_pixels  = 0
-    dice_score  = 0
-    iou_score   = 0
+    num_pixels = 0
+    dice_score = 0
+    iou_score = 0
     model.eval()
 
     with torch.no_grad():
         for img, mask in tqdm(loader):
-            img   = img.to(device)
-            mask  = mask.to(device).unsqueeze(1)
-            preds = torch.sigmoid(model(img))
-            preds = (preds > 0.5).float()
-            num_correct += (preds == mask).sum()
-            num_pixels += torch.numel(preds)
-            dice_score += (2 * (preds * mask).sum()) / (
-                (preds + mask).sum() + 1e-7
-            ) 
-            intersection = (preds * mask).sum()
-            union = (preds + mask).sum() - intersection
-         
-            iou_score +=   intersection / (union + 1e-7)
+            num_correct_img, num_pixels_img, dice_score_img, iou_score_img = predict_for_image(img, mask, device)
+            num_correct += num_correct_img
+            num_pixels += num_pixels_img
+            dice_score += dice_score_img
+            iou_score += iou_score_img
 
     print(
         f"Got {num_correct}/{num_pixels} with pixel accuracy {num_correct/num_pixels*100:.2f}"
@@ -180,3 +189,18 @@ for k in range(2):
     ax[k][0].imshow(inputs[k].permute(1,2,0))
     ax[k][1].imshow(output[k][0].cpu())
     ax[k][2].imshow(masks[k])
+
+### WORST PREDICTIONS
+def find_worst_predictions(loader, device):
+    with torch.no_grad():
+        for img, mask in tqdm(loader):
+            num_correct_img, num_pixels_img, dice_score_img, iou_score_img = predict_for_image(img, mask, device)
+            predictions_by_iou[img] = iou_score_img
+
+predictions = False
+
+if predictions:
+    predictions_by_iou = {}
+    find_worst_predictions(val_loader, model, DEVICE)
+    find_worst_predictions(train_loader, model, DEVICE)
+    print(predictions_by_iou)
