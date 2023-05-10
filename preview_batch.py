@@ -12,6 +12,5 @@ for fold in range (1,5):
         print (fold, x)
         see=Field(fold,x)
         #see.plot_rgb(0,2)
-        #see.write_metric()
         see.plot_metric(1)
         input("Press Enter to continue...")
