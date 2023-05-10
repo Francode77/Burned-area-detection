@@ -1,4 +1,4 @@
-from classes import Field
+from field import Field
 import os
 
 # Fold 0 : 78

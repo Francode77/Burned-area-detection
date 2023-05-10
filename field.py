@@ -2,21 +2,19 @@
 
 import rasterio
 from loader import loader
-import matplotlib.pyplot as plt
-from rasterio.plot import show
 import numpy as np
 import os
-from skimage.color import rgb2gray
- 
+
+
 class DataSource:
    loaded_in_batches = {}
-   
+
    def get_image(source_file,batch_nr, img_nr, scene_nr):
        batches_for_file=DataSource.loaded_in_batches.setdefault(source_file,{})
        if batch_nr not in batches_for_file:
            DataSource.loaded_in_batches[source_file][batch_nr] = loader(source_file, [batch_nr]) 
        return DataSource.loaded_in_batches[source_file][batch_nr][scene_nr][img_nr,:,:,:]
-   
+
    def get_band(source_file,batch_nr, img_nr, scene_nr, band_nr):
        batches_for_file=DataSource.loaded_in_batches.setdefault(source_file,{})
        if batch_nr not in batches_for_file:
@@ -44,80 +42,7 @@ class Field:
         self.batch_nr = batch_nr  
         self.source_file = source_file
         self.source_name = str(source_file)[5:-4]
-    
-    """ PLOT FUNCTIONS """    
-    def plot(self,indicator,mask):
-        fig, ax = plt.subplots(figsize=(10, 10))  
-        cmap=None
-        ax.imshow(indicator,cmap=cmap)
-        if mask==1:
-            mask=self.return_mask()       
-            ax.imshow(mask,alpha=.33)
-        plt.show()
-            
-    def bi_plot(self,indicator,before,after,cmap,mask):
-    
-        fig, axs = plt.subplots(1, 2, figsize=(15, 15))        
- 
-        axs[0].imshow(after,cmap=cmap)
-        axs[0].set_title(f'{indicator} Scene 0 | Fold {self.batch_nr} | Image {self.img_nr}')    
-        axs[1].imshow(before,cmap=cmap)
-        if mask==1:
-            mask=self.return_mask()       
-            axs[1].imshow(mask,alpha=.3)
-        axs[1].set_title(f'{indicator} Scene 1 | Fold {self.batch_nr} | Image {self.img_nr}')        
-        plt.show()    
-        
-    def bi_plot_mask(self,img): 
-        mask=self.return_mask()        
-        fig, axs = plt.subplots(1, 2, figsize=(15, 15))        
-        cmap=None
-        axs[0].imshow(img,cmap=cmap,vmin=-1,vmax=1)
-        axs[0].set_title(f'RESULT | Fold {self.batch_nr} | Image {self.img_nr}')        
-        axs[1].imshow(mask)
-        axs[1].set_title(f'MASK | Fold {self.batch_nr} | Image {self.img_nr}') 
-        plt.show()    
-            
-    def plot_watermask(self):        
-        water_mask=self.get_water_mask()
-        fig, ax = plt.subplots(figsize=(10, 10)) 
-        ax.imshow(water_mask)
-         
-    def plot_hist(self,metric):
-        
-        counts, bins = np.histogram(metric.flatten())
-        plt.hist(bins[:-1], bins, weights=counts)
-        plt.ylim(0,200)
- 
-    """ PLOT INDICES FUNCTIONS"""
-        
-    def plot_rgb(self,mask,factor):
-        r,g,b=self.get_rgb(0)
-        
-        # Stack the bands to create an RGB image
-        RGB_after = rasterio.plot.reshape_as_image([norm(r), norm(g), norm(b)])
-        
-        r,g,b=self.get_rgb(1)
-        RGB_before= rasterio.plot.reshape_as_image([norm(r), norm(g), norm(b)])
-        
-        cmap=None
-        self.bi_plot("RGB",RGB_before*factor,RGB_after*factor,cmap=cmap,mask=mask)
-        
-    def plot_abai(self,mask):
-         
-        B03=self.bands(0,2) 
-        B11=self.bands(0,10) 
-        B12=self.bands(0,11) 
-        ABAI_after = (3*B12 - 2 * B11 - 3 * B03 ) / ((3*B12 + 2*B11 +3*B03) + 1e-10)
-        B03=self.bands(1,2) 
-        B11=self.bands(1,10) 
-        B12=self.bands(1,11) 
-        ABAI_before = (3*B12 - 2 * B11 - 3 * B03 ) / ((3*B12 + 2*B11 +3*B03) + 1e-10)
-            
-        cmap=None
-        self.bi_plot("ABAI", ABAI_before, ABAI_after,cmap=cmap,mask=mask)     
 
-         
     """ RETURN FUNCTIONS """       
  
     def bands(self,scene_nr,band_nr):
@@ -228,24 +153,3 @@ class Field:
         
             # Write the numpy array to the file
             dst.write(mask_data, 1)
-        
-    def plot_metric(self,mask):
- 
-        metric=self.calculate_metric()
-        
-        # Plot the output
-        self.plot(metric,mask=0) 
-        
-        # Plot output with mask comparison
-        self.bi_plot_mask(metric)
-        
-        
-        
-class FieldPlotter:
-    def __init__(self,field : Field):
-        self.field=field
-    
- 
-
-        
-     
