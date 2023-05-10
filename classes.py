@@ -174,24 +174,13 @@ class Field:
         ABAI_before,ABAI_after = self.get_bi_abai()  
         metric = ABAI_after
         
-        self.plot_hist(metric)
- 
         # Mask water with min value of metric
         water_mask=self.get_water_mask() 
         metric[water_mask == 1] = metric.min()
         
-        self.plot_hist(metric)
-        
         # Normalize & standardize        
         metric_scaled = (2 * norm(metric)) - 1
         metric=metric_scaled 
-        count_ones = np.count_nonzero(metric > 0.5)
-
-        print("Number of ones:", count_ones)
-        
-        
-        self.plot_hist(metric)
-          
         
         # Set a threshold 
         metric[metric <0]=-1

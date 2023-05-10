@@ -496,8 +496,9 @@ class Field:
            #delta=BSI_delta + NBRI_delta - NDMI_delta - GNDVI_delta
            #delta = stand(ABAI_after)
        else:
-           metric=BSI_after + NBRI_after - NDMI_after - GNDVI_after
-           return
+           metric=0
+           return metric
+       
        #self.plot(BAI_delta,mask=0) 
        """
        self.plot(BSI_delta,mask=0)         
@@ -527,6 +528,10 @@ class Field:
     def write_metric(self):
         
         metric=self.calculate_metric()
+        
+        # Skip if non_zero pixels < 0.90 threshold
+        if type(metric)!=np.ndarray:
+            return
         
         """SAVE AS TIFF GEOTIFF"""
         
@@ -562,8 +567,12 @@ class Field:
             dst.write(mask_data, 1)
         
     def plot_metric(self,mask):
- 
+        
         metric=self.calculate_metric()
+        
+        # Skip if non_zero pixels < 0.90 threshold
+        if type(metric)!=np.ndarray:
+            return 
         
         # Plot the output
         self.plot(metric,mask=0) 
