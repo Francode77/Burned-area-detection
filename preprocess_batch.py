@@ -11,7 +11,4 @@ for fold in range (1,5):
     for x in range (0,fold_len[fold]):
         print (fold, x)
         see=Field(fold,x)
-        #see.plot_rgb(0,2)
-        #see.write_metric()
-        see.plot_metric(1)
-        input("Press Enter to continue...")
+        see.write_metric() 
