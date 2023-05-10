@@ -7,24 +7,27 @@ from rasterio.plot import show
 import numpy as np
 import os
 from skimage.color import rgb2gray
-
+ 
 class DataSource:
    loaded_in_batches = {}
    
-   def get_image(batch_nr, img_nr, scene_nr):
-       if batch_nr not in DataSource.loaded_in_batches:
-           DataSource.loaded_in_batches[batch_nr] = loader('./data/train_eval.hdf5', [batch_nr]) 
-       return DataSource.loaded_in_batches[batch_nr][scene_nr][img_nr,:,:,:]
+   def get_image(source_file,batch_nr, img_nr, scene_nr):
+       batches_for_file=DataSource.loaded_in_batches.setdefault(source_file,{})
+       if batch_nr not in batches_for_file:
+           DataSource.loaded_in_batches[source_file][batch_nr] = loader(source_file, [batch_nr]) 
+       return DataSource.loaded_in_batches[source_file][batch_nr][scene_nr][img_nr,:,:,:]
    
-   def get_band(batch_nr, img_nr, scene_nr, band_nr):
-       if batch_nr not in DataSource.loaded_in_batches:
-           DataSource.loaded_in_batches[batch_nr] = loader('./data/train_eval.hdf5', [batch_nr]) 
-       return DataSource.loaded_in_batches[batch_nr][scene_nr][img_nr,:,:,band_nr]
+   def get_band(source_file,batch_nr, img_nr, scene_nr, band_nr):
+       batches_for_file=DataSource.loaded_in_batches.setdefault(source_file,{})
+       if batch_nr not in batches_for_file:
+           DataSource.loaded_in_batches[source_file][batch_nr] = loader(source_file, [batch_nr]) 
+       return DataSource.loaded_in_batches[source_file][batch_nr][scene_nr][img_nr,:,:,band_nr]
  
-   def get_mask(batch_nr, img_nr):
-       if batch_nr not in DataSource.loaded_in_batches:
-           DataSource.loaded_in_batches[batch_nr] = loader('./data/train_eval.hdf5', [batch_nr]) 
-       return DataSource.loaded_in_batches[batch_nr][2][img_nr,:,:,0]
+   def get_mask(source_file,batch_nr, img_nr):
+       batches_for_file=DataSource.loaded_in_batches.setdefault(source_file,{})
+       if batch_nr not in batches_for_file:
+           DataSource.loaded_in_batches[source_file][batch_nr] = loader(source_file, [batch_nr]) 
+       return DataSource.loaded_in_batches[source_file][batch_nr][2][img_nr,:,:,0]
    
 def norm(band):
     band_min, band_max = band.min(), band.max()
@@ -35,10 +38,12 @@ def stand(band):
     return ((2 * (band - band_min)/(band_max - band_min)) - 1)
     
 class Field:
-    def __init__(self, batch_nr,img_nr):     
+    def __init__(self, source_file, batch_nr, img_nr):     
          
         self.img_nr = img_nr # image in batch
         self.batch_nr = batch_nr  
+        self.source_file = source_file
+        self.source_name = str(source_file)[5:-4]
     
     """ PLOT FUNCTIONS """    
     def plot(self,indicator,mask):
@@ -116,11 +121,11 @@ class Field:
     """ RETURN FUNCTIONS """       
  
     def bands(self,scene_nr,band_nr):
-        band = DataSource.get_band(self.batch_nr, self.img_nr, scene_nr, band_nr)
+        band = DataSource.get_band(self.source_file, self.batch_nr, self.img_nr, scene_nr, band_nr)
         return band
                
     def return_mask(self): 
-        self.mask=DataSource.get_mask(self.batch_nr, self.img_nr) 
+        self.mask=DataSource.get_mask(self.source_file, self.batch_nr, self.img_nr) 
         return self.mask  
     
     def get_rgb(self,scene_nr):    
@@ -208,7 +213,7 @@ class Field:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         # Open a new raster file for writing
-        with rasterio.open(f'{output_dir}/{self.batch_nr}_{self.img_nr}.tif', 'w', **meta) as dst:
+        with rasterio.open(f'{output_dir}/{self.source_name}_{self.batch_nr}_{self.img_nr}.tif', 'w', **meta) as dst:
         
             # Write the numpy array to the file
             dst.write(metric, 1)
@@ -219,7 +224,7 @@ class Field:
         if not os.path.exists(output_dir):
             os.makedirs(output_dir)
         # Open a new raster file for writing
-        with rasterio.open(f'{output_dir}/{self.batch_nr}_{self.img_nr}.tif', 'w', **meta) as dst:
+        with rasterio.open(f'{output_dir}/{self.source_name}_{self.batch_nr}_{self.img_nr}.tif', 'w', **meta) as dst:
         
             # Write the numpy array to the file
             dst.write(mask_data, 1)
@@ -236,6 +241,10 @@ class Field:
         
         
         
+class FieldPlotter:
+    def __init__(self,field : Field):
+        self.field=field
+    
  
 
         
