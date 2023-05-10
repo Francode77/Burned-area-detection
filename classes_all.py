@@ -7,25 +7,8 @@ from rasterio.plot import show
 import numpy as np
 import os
 from skimage.color import rgb2gray
+from field import DataSource
 
-class DataSource:
-   loaded_in_batches = {}
-   
-   def get_image(batch_nr, img_nr, scene_nr):
-       if batch_nr not in DataSource.loaded_in_batches:
-           DataSource.loaded_in_batches[batch_nr] = loader('./data/train_eval.hdf5', [batch_nr]) 
-       return DataSource.loaded_in_batches[batch_nr][scene_nr][img_nr,:,:,:]
-   
-   def get_band(batch_nr, img_nr, scene_nr, band_nr):
-       if batch_nr not in DataSource.loaded_in_batches:
-           DataSource.loaded_in_batches[batch_nr] = loader('./data/train_eval.hdf5', [batch_nr]) 
-       return DataSource.loaded_in_batches[batch_nr][scene_nr][img_nr,:,:,band_nr]
- 
-   def get_mask(batch_nr, img_nr):
-       if batch_nr not in DataSource.loaded_in_batches:
-           DataSource.loaded_in_batches[batch_nr] = loader('./data/train_eval.hdf5', [batch_nr]) 
-       return DataSource.loaded_in_batches[batch_nr][2][img_nr,:,:,0]
-   
 def norm(band):
     band_min, band_max = band.min(), band.max()
     return ((band - band_min)/(band_max - band_min))
@@ -33,16 +16,17 @@ def norm(band):
 def stand(band):
     band_min, band_max = band.min(), band.max()
     return ((2 * (band - band_min)/(band_max - band_min)) - 1)
-    
+
+file_name = './data/train_eval.hdf5'
+
+
 class Field:
-    def __init__(self, batch_nr,img_nr):     
-         
+    def __init__(self, batch_nr,img_nr):
         self.img_nr = img_nr # image in batch
         self.batch_nr = batch_nr 
-        
- 
+
     def bands(self,scene_nr,band_nr):
-        band = DataSource.get_band(self.batch_nr, self.img_nr, scene_nr, band_nr)
+        band = DataSource.get_band(file_name, self.batch_nr, self.img_nr, scene_nr, band_nr)
         return band
     
     def get_rgb(self,scene_nr):    
@@ -52,7 +36,7 @@ class Field:
         return r,g,b     
            
     def return_mask(self): 
-        self.mask=DataSource.get_mask(self.batch_nr, self.img_nr) 
+        self.mask=DataSource.get_mask(file_name, self.batch_nr, self.img_nr)
         return self.mask   
     
     def plot(self,indicator,mask):
