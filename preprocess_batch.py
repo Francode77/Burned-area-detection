@@ -1,6 +1,6 @@
 from field import Field
 import os
-
+ 
 # 'train_eval.hdf5'
 source_file=os.path.join('data','train_eval.hdf5')
 for fold in range (1,5):
@@ -11,7 +11,7 @@ for fold in range (1,5):
             see.write_metric() 
         except:
             break
-
+"""
 # Extra data  
 fold_lengths=[6,6,1]
 files=['california_0.hdf5','california_1.hdf5','california_2.hdf5']
@@ -28,3 +28,4 @@ for idx, file in enumerate(files):
                     break
         except:
             break
+"""

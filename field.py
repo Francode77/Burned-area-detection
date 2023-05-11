@@ -50,8 +50,8 @@ class Field:
         return band
                
     def return_mask(self): 
-        self.mask=DataSource.get_mask(self.source_file, self.batch_nr, self.img_nr) 
-        return self.mask  
+        mask=DataSource.get_mask(self.source_file, self.batch_nr, self.img_nr) 
+        return mask  
     
     def get_rgb(self,scene_nr):    
         r=self.bands(scene_nr,3)
@@ -101,7 +101,7 @@ class Field:
     
     def calculate_metric(self):
         # Get the indices 
-        ABAI_before,ABAI_after = self.get_bi_abai()  
+        _,ABAI_after = self.get_bi_abai()  
         metric = ABAI_after
         
         # Mask water with min value of metric
