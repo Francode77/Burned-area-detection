@@ -1,5 +1,7 @@
 from field import Field, norm
-
+import matplotlib.pyplot as plt
+import numpy as np
+import rasterio
 
 class FieldPlotter:
     def __init__(self,field : Field):
