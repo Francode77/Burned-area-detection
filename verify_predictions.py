@@ -8,15 +8,15 @@ import os
 # 'train_eval.hdf5'
 source_file=os.path.join('data','train_eval.hdf5')
 for fold in range (1):
-    for x in range (1,2):
+    for x in range (99):
         try: 
             print (fold, x)
             
-            image=DataSource.get_image(source_file,fold, x, 0)
- 
-            metric, mask, bool_output=MakePrediction.predict(image) 
- 
-            FieldPlotter.plot_submission(image, metric, mask, 2)    
+            image = DataSource.get_image(source_file,fold, x, 0) 
+            mask_truth = DataSource.get_mask(source_file, fold, x)
+            metric, prediction, mask_pred = MakePrediction.predict(image)  
+            FieldPlotter.plot_evaluation(image, metric, prediction, mask_truth, 2)    
+            
         except IndexError:
             break
      

@@ -12,7 +12,7 @@ import os
 import rasterio
 from plotting import FieldPlotter
 import matplotlib.colors as mcolors
-
+import sys
 # Define custom colors
 colors = ['purple', 'yellow']
 
@@ -70,21 +70,8 @@ class MakePrediction:
     def get_abai(image):     
         B03=MakePrediction.get_band(image,2) 
         B11=MakePrediction.get_band(image,10) 
-        B12=MakePrediction.get_band(image,11) 
-        
-        ABAI = (3*B12 - 2*B11 - 3*B03 ) / ((3*B12 + 2*B11 +3*B03) + 1e-10)
-        """
-        fig, ax = plt.subplots(figsize=(10, 10))
-        cmap = None        
-        ax.imshow(ABAI, cmap=cmap)
-        plt.show()
-        """
-        print (B03.mean(),B03.max(),B03.min(),'<< B3')
-        print (B11.mean(),B11.max(),B11.min(),'<< B11')
-        print (B12.mean(),B12.max(),B12.min(),'<< B12')
-         
-        print (ABAI.mean(),ABAI.max(),ABAI.min(),'<< ABAI')
-        
+        B12=MakePrediction.get_band(image,11)         
+        ABAI = (3*B12.astype(float) - 2*B11.astype(float) - 3*B03.astype(float) ) / ((3*B12.astype(float) + 2*B11.astype(float) +3*B03.astype(float)) + 1e-10)
         return ABAI
     
     def get_water_mask(image):
@@ -99,12 +86,7 @@ class MakePrediction:
         # Get the indices 
         ABAI = MakePrediction.get_abai(image)  
         metric = ABAI
-        """
-        fig, ax = plt.subplots(figsize=(10, 10))
-        cmap = None
-        ax.imshow(metric, cmap=cmap)
-        plt.show()
-        """
+        
         # Mask water with min value of metric
         water_mask=MakePrediction.get_water_mask(image) 
         metric[water_mask == 1] = metric.min()
@@ -117,6 +99,7 @@ class MakePrediction:
         #metric[metric <0]=-1
         return metric
     
+    # Not necessary anymore
     def write_eval_metric(image,uuid):
         
         metric=MakePrediction.calculate_metric(image)
