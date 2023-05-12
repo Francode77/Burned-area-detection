@@ -54,11 +54,11 @@ TRAIN_INP_DIR = os.path.join('data','processed','training_scene')
 TRAIN_OUT_DIR = os.path.join('data','processed','training_truth')
 DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
 
-LEARNING_RATE = 7e-5
-BATCH_SIZE    = 8
-NUM_EPOCHS    = 122
-IMAGE_HEIGHT  = 256
-IMAGE_WIDTH   = 256  
+LEARNING_RATE = 2e-4
+BATCH_SIZE    = 4
+NUM_EPOCHS    = 24
+IMAGE_HEIGHT  = 512
+IMAGE_WIDTH   = 512  
 
 train_transform = A.Compose(
     [

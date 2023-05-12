@@ -1,6 +1,6 @@
 # Class field
-
 import rasterio
+from rasterio import plot
 from loader import loader
 import numpy as np
 import os
@@ -113,7 +113,7 @@ class Field:
         metric=metric_scaled 
         
         # Set a threshold 
-        metric[metric <0]=-1
+        #metric[metric <0]=-1
         
         return metric
         

@@ -10,8 +10,8 @@ from plotting import FieldPlotter
 file_name = './data/train_eval.hdf5'
 
 fold_len=[78,55,69,85,69]
-for fold in range (4,5):
-    for x in range (27,fold_len[fold]):
+for fold in range (1):
+    for x in range (0,fold_len[fold]):
         print (fold, x)
         see=Field(file_name, fold, x)
         plotter = FieldPlotter(see)
