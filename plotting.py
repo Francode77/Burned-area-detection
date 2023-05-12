@@ -60,17 +60,19 @@ class FieldPlotter:
 
     """ PLOT INDICES FUNCTIONS"""
 
-    def plot_rgb(self, mask, factor):
+    def plot_rgb(self, mask, brightness):
         r, g, b = self.field.get_rgb(0)
-
-        # Stack the bands to create an RGB image
         RGB_after = rasterio.plot.reshape_as_image([norm(r), norm(g), norm(b)])
 
         r, g, b = self.field.get_rgb(1)
         RGB_before = rasterio.plot.reshape_as_image([norm(r), norm(g), norm(b)])
 
-        cmap = None
-        self.bi_plot("RGB", RGB_before * factor, RGB_after * factor, cmap=cmap, mask=mask)
+        RGB_before = RGB_before * brightness
+        RGB_before[RGB_before>1] = 1
+        RGB_after = RGB_after * brightness
+        RGB_after[RGB_after>1] = 1        
+        
+        self.bi_plot("RGB", RGB_before, RGB_after, cmap=None, mask=mask)
 
     def plot_abai(self, mask):
 
@@ -97,7 +99,7 @@ class FieldPlotter:
     
     """ PLOT EVALUATION FUNCTIONS """
     
-    def plot_submission(image, metric, mask, factor):
+    def plot_evaluation(image, metric, pred_mask, truth, brightness):
         
         cmap = mcolors.ListedColormap(['purple', 'yellow'])
         r=image[:,:,3]
@@ -110,16 +112,51 @@ class FieldPlotter:
         NDWI = (B03.astype(float) - B08.astype(float)) / (B03.astype(float) + B08.astype(float) + 1e-10)   
         NDWI[NDWI>0]=1
         NDWI[NDWI<0]=-1
-    
+        
+        rgb_image=rgb_image * brightness
+        rgb_image[rgb_image>1]=1
+        
         fig, axs = plt.subplots(1, 4, figsize=(15, 15))
-        axs[0].imshow(rgb_image * factor, cmap=None)
+        axs[0].imshow((rgb_image), cmap=None)
         axs[0].set_title(f'RGB')
-        axs[1].imshow(NDWI, cmap=None)
-        axs[1].set_title(f'NDWI')
-        axs[2].imshow(metric, cmap=None)
-        axs[2].set_title(f'METRIC')
-        axs[3].imshow(mask, cmap=cmap)
-        axs[3].set_title(f'Our MASK')
+        #axs[1].imshow(NDWI, cmap=None)
+        #axs[1].set_title(f'NDWI')
+        axs[1].imshow(metric, cmap=None)
+        axs[1].set_title(f'METRIC')
+        axs[2].imshow(pred_mask, cmap=cmap)
+        axs[2].set_title(f'Our MASK')
+        axs[3].imshow(truth, cmap=cmap)
+        axs[3].set_title(f'TRUTH')
+        plt.show()
+        
+    
+    def plot_submission(image, metric, pred_mask, brightness):
+        
+        cmap = mcolors.ListedColormap(['purple', 'yellow'])
+        r=image[:,:,3]
+        g=image[:,:,2]
+        b=image[:,:,1]
+        rgb_image = rasterio.plot.reshape_as_image([norm(r), norm(g), norm(b)])
+        
+        B03=image[:,:,2]
+        B08=image[:,:,7]
+        NDWI = (B03.astype(float) - B08.astype(float)) / (B03.astype(float) + B08.astype(float) + 1e-10)   
+        NDWI[NDWI>0]=1
+        NDWI[NDWI<0]=-1
+        
+        rgb_image=rgb_image * brightness
+        rgb_image[rgb_image>1]=1
+        
+        fig, axs = plt.subplots(1, 3, figsize=(15, 15))
+        axs[0].imshow((rgb_image), cmap=None)
+        axs[0].set_title(f'RGB')
+        #axs[1].imshow(NDWI, cmap=None)
+        #axs[1].set_title(f'NDWI')
+        axs[1].imshow(metric, cmap=None)
+        axs[1].set_title(f'METRIC')
+        axs[2].imshow(pred_mask, cmap=cmap)
+        axs[2].set_title(f'Our MASK')
+        
         plt.show()
         
         
