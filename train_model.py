@@ -10,6 +10,11 @@ from albumentations.pytorch import ToTensorV2
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+from torchvision.io.image import read_image
+from torchvision.models.segmentation import fcn_resnet50, FCN_ResNet50_Weights
+from torchvision.transforms.functional import to_pil_image
+DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
+
 def seed_everything(seed):
     os.environ["PYTHONHASHSEED"] = str(seed)
     np.random.seed(seed)
@@ -17,8 +22,6 @@ def seed_everything(seed):
     torch.cuda.manual_seed(seed)
     torch.backends.cudnn.deterministic = True
     torch.backends.cudnn.benchmark = True
-    
-seed_everything(38)
 
 class SegmentationDataset(Dataset):
     def __init__(self, input_dir, output_dir, is_train, transform=None):
@@ -49,32 +52,6 @@ class SegmentationDataset(Dataset):
             mask  = augmentations["mask"]
         
         return img, mask
-    
-TRAIN_INP_DIR = os.path.join('data','processed','training_scene')
-TRAIN_OUT_DIR = os.path.join('data','processed','training_truth')
-DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
-
-LEARNING_RATE = 2e-4
-BATCH_SIZE    = 4
-NUM_EPOCHS    = 24
-IMAGE_HEIGHT  = 512
-IMAGE_WIDTH   = 512  
-
-train_transform = A.Compose(
-    [
-        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        
-        A.HorizontalFlip(p=0.5),
-        ToTensorV2(),
-    ],
-)
-
-val_transform = A.Compose(
-    [
-        A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
-        ToTensorV2(),
-    ],
-)
 
 def get_loaders( inp_dir, mask_dir,batch_size,
 			     train_transform, val_tranform ):
@@ -91,14 +68,7 @@ def get_loaders( inp_dir, mask_dir,batch_size,
 
     return train_loader, val_loader
 
-train_loader, val_loader = get_loaders( TRAIN_INP_DIR, TRAIN_OUT_DIR,
-                            BATCH_SIZE,  train_transform, val_transform)
-inputs, masks = next(iter(train_loader))
-print(inputs.shape)
-print (len(train_loader),len(val_loader))
-_, ax = plt.subplots(1,2)
-ax[0].imshow(inputs[0].permute(1,2,0)[:,:,0])
-ax[1].imshow(masks[0])
+
 
 def predict_for_image(img, mask, device=DEVICE):
     img = img.to(device)
@@ -148,22 +118,20 @@ def check_accuracy(loader, model, device="cuda"):
     print(f"IoU score: {iou_score/(len(loader)-ignored)*100:.2f} ({ignored} ignored) ")
     model.train()
     
-model_name='xception'
-
-model = smp.Unet(encoder_name=model_name, in_channels=1, classes=1, activation=None).to(DEVICE)
-loss_fn   = nn.BCEWithLogitsLoss()
-optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-
-
 def train_fn(loader, model, optimizer, loss_fn):
     loop = tqdm(loader)
 
-    for batch_idx, (image, mask) in enumerate(loop):
-        image   = image.to(device=DEVICE)
+    for batch_idx, (tensor_img, mask) in enumerate(loop):
+        #print (tensor_img.shape,'<<<') 
+        #tensor_img = torch.cat((tensor_img, tensor_img, tensor_img), dim=1)
+        
+        #tensor_img =  tensor_img.repeat(1, 3, 1, 1)
+        #print (tensor_img.shape,'<<<')
+        tensor_img   = tensor_img.to(device=DEVICE)
         mask    = mask.float().unsqueeze(1).to(device=DEVICE)
 
         # forward
-        predictions = model(image)
+        predictions = model(tensor_img)
         loss = loss_fn(predictions, mask)
 
         # backward
@@ -172,33 +140,91 @@ def train_fn(loader, model, optimizer, loss_fn):
         optimizer.step()
 
         # update tqdm loop
-        loop.set_postfix(loss=loss.item())
+        loop.set_postfix(loss=loss.item())          
         
-for epoch in range(NUM_EPOCHS):
-
-    print('########################## epoch: '+str(epoch))
-    train_fn(train_loader, model, optimizer, loss_fn)
+if __name__ == "__main__":
+    seed_everything(38)
+        
+    TRAIN_INP_DIR = os.path.join('data','processed','training_scene')
+    TRAIN_OUT_DIR = os.path.join('data','processed','training_truth')
     
-    # check accuracy
-    check_accuracy(val_loader, model, device=DEVICE)
+    MODEL_NAME = 'xception'
+    MODEL_NAME = 'deeplabv3_resnet50'
+    MODEL_NAME = 'resnet101'
+    MODEL_NAME = 'resnet50'
     
-inputs, masks = next(iter(val_loader))
-output        = ((torch.sigmoid(model(inputs.to(DEVICE)))) >0.5).float()
-
-# Save the trained model
-MODEL_PATH = f"{model_name}_trained_{IMAGE_HEIGHT}px.pt"
-torch.save(model.state_dict(), MODEL_PATH)
-
-_, ax = plt.subplots(2,3, figsize=(15,10))
-for k in range(2):
-    ax[k][0].imshow(inputs[k].permute(1,2,0))
-    ax[k][1].imshow(output[k][0].cpu())
-    ax[k][2].imshow(masks[k])
-     
-    mask=masks[k]
-    num_zeros = (mask == 0).sum().item()
-    num_non_zeros = mask.numel() - num_zeros
-    percentage_zeros = (num_zeros / mask.numel()) * 100
-    print( percentage_zeros,"%")
-    print (num_non_zeros)
+    LEARNING_RATE = 3e-4
+    BATCH_SIZE    = 4
+    NUM_EPOCHS    = 36
+    IMAGE_HEIGHT  = 512
+    IMAGE_WIDTH   = 512  
+    
+    train_transform = A.Compose(
+        [
+            A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+            A.HorizontalFlip(p=0.1),
+            A.VerticalFlip(p=0.1),
+            A.RandomRotate90(p=0.1),
+            A.Transpose(p=0.1),
+            ToTensorV2(),
+        ],
+    )
+    
+    val_transform = A.Compose(
+        [
+            A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
+            ToTensorV2(),
+        ],
+    )
+    
+    train_loader, val_loader = get_loaders( TRAIN_INP_DIR, TRAIN_OUT_DIR,
+                                BATCH_SIZE,  train_transform, val_transform)
+    inputs, masks = next(iter(train_loader))
+    print(inputs.shape)
+    print (len(train_loader),len(val_loader))
+    _, ax = plt.subplots(1,2)
+    ax[0].imshow(inputs[0].permute(1,2,0)[:,:,0])
+    ax[1].imshow(masks[0])
+    plt.show()
+    
+    if MODEL_NAME == 'resnet50' or MODEL_NAME == 'resnet101' or MODEL_NAME == 'xception':
+    
+        model = smp.Unet(encoder_name=MODEL_NAME, in_channels=1, classes=1, activation=None).to(DEVICE)
+        loss_fn   = nn.BCEWithLogitsLoss()
+        optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+        
+    if MODEL_NAME == 'deeplabv3_resnet50':
+        model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', weights = 'DeepLabV3_ResNet50_Weights.DEFAULT').to(DEVICE)
+        loss_fn   = nn.BCEWithLogitsLoss()
+        optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    
+        
+            
+    for epoch in range(NUM_EPOCHS):
+    
+        print('########################## epoch: '+str(epoch))
+        train_fn(train_loader, model, optimizer, loss_fn)
+        
+        # check accuracy
+        check_accuracy(val_loader, model, device=DEVICE)
+        
+    inputs, masks = next(iter(val_loader))
+    output        = ((torch.sigmoid(model(inputs.to(DEVICE)))) >0.5).float()
+    
+    # Save the trained model
+    MODEL_PATH = f"{MODEL_NAME}_trained_{IMAGE_HEIGHT}px.pt"
+    torch.save(model.state_dict(), MODEL_PATH)
+    
+    _, ax = plt.subplots(2,3, figsize=(15,10))
+    for k in range(2):
+        ax[k][0].imshow(inputs[k].permute(1,2,0))
+        ax[k][1].imshow(output[k][0].cpu())
+        ax[k][2].imshow(masks[k])
+         
+        mask=masks[k]
+        num_zeros = (mask == 0).sum().item()
+        num_non_zeros = mask.numel() - num_zeros
+        percentage_zeros = (num_zeros / mask.numel()) * 100
+        print( percentage_zeros,"%")
+        print (num_non_zeros)
  

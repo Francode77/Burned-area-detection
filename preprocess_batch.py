@@ -1,6 +1,6 @@
 from field import Field
 import os
- 
+"""
 # 'train_eval.hdf5'
 source_file=os.path.join('data','train_eval.hdf5')
 for fold in range (1,5):
@@ -28,4 +28,3 @@ for idx, file in enumerate(files):
                     break
         except:
             break
-"""

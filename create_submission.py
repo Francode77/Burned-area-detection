@@ -12,15 +12,18 @@ from make_predictions import MakePrediction
 from plotting import FieldPlotter 
 
 DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
-  
+MODEL_NAME = "resnet50"
+
+
 class FixedModel:
-    def __init__(self, shape) -> None:
-        self.shape = shape        
+    def __init__(self, shape, model_name) -> None:
+        self.shape = shape     
+        self.model_name = model_name
         return
     
     def __call__(self, input_dict, uuid) -> Any:
         image=input_dict['post']
-        metric, mask, prediction = MakePrediction.predict(image) 
+        metric, mask, prediction = MakePrediction.predict(image,self.model_name) 
         FieldPlotter.plot_submission(image, metric, mask, 2)
         return prediction
 
@@ -44,7 +47,7 @@ if __name__ == '__main__':
     # use a list to accumulate results
     result = []     
     # instantiate the model
-    model = FixedModel(shape=(512, 512))
+    model = FixedModel(shape=(512, 512), model_name=MODEL_NAME)
  
     for uuid in validation_fold: 
         input_image = validation_fold[uuid]
@@ -56,6 +59,6 @@ if __name__ == '__main__':
     
     # concatenate all dataframes
     submission_df = pd.concat(result)
-    submission_df.to_csv('predictions.csv', index=False)
+    submission_df.to_csv(f'predictions_{MODEL_NAME}.csv', index=False)
     
     
