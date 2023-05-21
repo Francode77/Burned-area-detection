@@ -10,9 +10,9 @@ import os
 import matplotlib.pyplot as plt
 
 MODEL_NAME = 'xception'
-MODEL_NAME = 'deeplabv3_resnet50'
 MODEL_NAME = 'resnet101'
 MODEL_NAME = 'resnet50'
+MODEL_NAME = 'deeplabv3_resnet50'
 
 BRIGHTNESS = 4
  

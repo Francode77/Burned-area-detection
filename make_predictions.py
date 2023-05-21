@@ -11,6 +11,8 @@ import matplotlib.colors as mcolors
 from scipy.ndimage import binary_dilation, binary_erosion
 from scipy.ndimage.morphology import generate_binary_structure
 
+from torch import nn
+
 # Define custom colors
 colors = ['purple', 'yellow']
 
@@ -52,17 +54,49 @@ class MakePrediction:
         model_name  = model_name
         MODEL_PATH  = f"{model_name}_trained_{IMG_HEIGHT}px.pt"
         
-        model = smp.Unet(encoder_name=model_name, in_channels=1, classes=1, activation=None).to(DEVICE)
-        model.load_state_dict(torch.load(MODEL_PATH))
-        model.eval() 
+        if model_name=='deeplabv3_resnet50':
+            model_path = MODEL_PATH
+
+            # Ensure your model architecture matches the one used during training
+            model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', weights = 'DeepLabV3_ResNet50_Weights.DEFAULT').to(device=DEVICE)
+
+        
+            # Update the model architecture if necessary
+            # For instance, if you have 2 classes instead of the default 21
+            num_classes = 1
+            model.classifier[4] = nn.Conv2d(256, num_classes, 1).to(device=DEVICE)
+            model.aux_classifier[4] = nn.Conv2d(256, num_classes, 1).to(device=DEVICE)
+          
+            model.backbone.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False).to(device=DEVICE)
+            weight = model.backbone.conv1.weight.clone()
+            aux_weight = model.aux_classifier[4].weight.clone()
+            with torch.no_grad():
+                model.backbone.conv1.weight[:, :3] = weight
+                model.backbone.conv1.weight[:, 0]  = torch.mean(weight, dim=1)
+                model.aux_classifier[4].weight[:, 0]= torch.mean(aux_weight, dim=1)
+            # Load the trained model weights
+            model.load_state_dict(torch.load(model_path),strict=False)
+            
+            # Switch to evaluation mode for inference
+            model.eval()
+            
+        else:
+            
+            model = smp.Unet(encoder_name=model_name, in_channels=1, classes=1, activation=None).to(DEVICE)
+            model.load_state_dict(torch.load(MODEL_PATH))
+            model.eval() 
+            
+            
         transform_ = transforms.Compose([transforms.ToTensor(), 
             transforms.Resize((IMG_HEIGHT,IMG_HEIGHT),antialias=True)])
         # get normalized image
         img_tensor = transform_(metric).float()
         img_tensor = img_tensor.unsqueeze_(0)
         img_tensor = img_tensor.to(DEVICE)
- 
-        result = ((torch.sigmoid(model(img_tensor.to(DEVICE)))) >0.5).float()
+        if model_name=='deeplabv3_resnet50':
+            result = ((torch.sigmoid(model(img_tensor.to(DEVICE))["out"])) >0.5).float()
+        else:
+            result = ((torch.sigmoid(model(img_tensor.to(DEVICE)))) >0.5).float()
          
         mask = result[0].cpu().numpy()
         mask = mask[0]  
