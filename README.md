@@ -37,7 +37,7 @@ run `preprocess_batch.py`
 run `preview_batch.py`
 Previews the images inside the .hdf5
 
-run `train_model.py``
+run `train_model.py`
 Training of the model with pytorch using unet architecture (resnet, xception_net, and deeplab_v3)
 
 run `verify predictions.py`
@@ -50,14 +50,11 @@ Prepares the .csv file to submit to the leaderboard
 
 `field.py`
 
-class field with 
-    functions to calculate NDVI etc.
-    function to write the metric and mask 
-
-    water mask to exclude regions with water
-         binary_dilation & erosion to exclude regions with vegetation in water
-    fire mask to exclude region with active fire
-    ABAI to calculate the ABAI index
+Class with functions to 
+    - calculate NDVI and other indexes
+    - write the metric and mask 
+    - create a water mask         
+    - fire mask to exclude region with active fire 
 
 `plotter.py`
 Several functions to plot everything
