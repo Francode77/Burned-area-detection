@@ -69,7 +69,7 @@ We can visually verify how our model performs by looking at the plots.
 
 For verfication we can run through the files with `verify_predictions.py`
 
-![verification](./assets/Figure 2023-07-30 183028.png)
+![verification fold 2 nr 47](./assets/verification_2_47.png)
 On the left we see the original file in RGB<br>
 Next we see the result of our metric, yellow indicates burned land area<br>
 Next the resulting mask from our model<br>
