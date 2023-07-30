@@ -49,7 +49,6 @@ Prepares the .csv file to submit to the leaderboard
 ## Includes
 
 `field.py`
-
 Class with functions to 
     - calculate NDVI and other indexes
     - write the metric and mask 
@@ -60,11 +59,8 @@ Class with functions to
 Several functions to plot everything
 
 `make_prediction.py`
-
- calculates the metric for an image and makes the prediction by using the selected model
+Calculates the metric for an image and makes the prediction by using the selected model
     
-     
-
 
 
 ## Results
@@ -73,11 +69,11 @@ We can visually verify how our model performs by looking at the plots.
 
 For verfication we can run through the files with `verify_predictions.py`
 
-![verification]('./assets/Figure 2023-07-30 183028.png')
-On the left we see the original file in RGB
-Next we see the result of our metric, yellow indicates burned land area
-Next the resulting mask from our model
-On the right the truth mask
+![verification](./assets/Figure 2023-07-30 183028.png)
+On the left we see the original file in RGB<br>
+Next we see the result of our metric, yellow indicates burned land area<br>
+Next the resulting mask from our model<br>
+On the right the truth mask<br>
 
 ## Limitations
 
