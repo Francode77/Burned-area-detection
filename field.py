@@ -77,6 +77,7 @@ class Field:
         water_mask[water_mask >= 0] = 1
         water_mask[water_mask < 0] = 0
         
+       # binary_dilation & erosion to exclude regions with vegetation in water
         def update_groups(matrix):   
             # Define the structuring element (larger size)
             structuring_element = generate_binary_structure(2, 2)
