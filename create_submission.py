@@ -14,7 +14,6 @@ from plotting import FieldPlotter
 DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
 MODEL_NAME = "resnet50"
 
-
 class FixedModel:
     def __init__(self, shape, model_name) -> None:
         self.shape = shape     
@@ -23,8 +22,13 @@ class FixedModel:
     
     def __call__(self, input_dict, uuid) -> Any:
         image=input_dict['post']
+        
+        # Calculate the metric and the prediction mask
         metric, mask, prediction = MakePrediction.predict(image,self.model_name) 
+        
+        # Plot the result
         FieldPlotter.plot_submission(image, metric, mask, 2)
+        
         return prediction
 
 def retrieve_validation_fold(path: Union[str, Path]) -> Dict[str, NDArray]:
@@ -44,20 +48,24 @@ def compute_submission_mask(id: str, mask: NDArray):
 if __name__ == '__main__':
 
     validation_fold = retrieve_validation_fold('data/train_eval.hdf5')
+    
     # use a list to accumulate results
     result = []     
-    # instantiate the model
+    
+    # Instantiate the model
     model = FixedModel(shape=(512, 512), model_name=MODEL_NAME)
  
     for uuid in validation_fold: 
         input_image = validation_fold[uuid]
-        # perform the prediction
+        
+        # Perform the prediction
         predicted = model(input_image,uuid)
-        # convert the prediction in RLE format
+        
+        # Convert the prediction in RLE format
         encoded_prediction = compute_submission_mask(uuid, predicted)
         result.append(pd.DataFrame(encoded_prediction))
     
-    # concatenate all dataframes
+    # Concatenate all dataframes
     submission_df = pd.concat(result)
     submission_df.to_csv(f'predictions_{MODEL_NAME}.csv', index=False)
     
