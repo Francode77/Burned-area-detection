@@ -58,7 +58,8 @@ Prepares the .csv file to submit to the leaderboard
     -   Visualises indexes on the pre- and post-fire scene.
 
 `field.py`
-    - Class that loads a uuid from the sourcefile and for any pair of images:
+    - Class that loads a uuid from the sourcefile and for any pair of images.<br>
+    
         - returns NDVI and other indexes
         - returns index differences between pre- and post-fire scenes
         - returns the metric and mask 
@@ -66,18 +67,14 @@ Prepares the .csv file to submit to the leaderboard
         - returns a fire mask to exclude region with active fire 
 
 `plotters.py` 
-    - Class that loads a uuid from the sourcefile and plots 
+    - Class that loads a uuid from the sourcefile and plots:<br>
+    
         - indexes such as NDVI,ABAI,BSI, ...
         - water mask and fire mask
 
 `make_prediction.py`
     -   Class that calculates the metric for a single image input and makes the prediction with the selected model
-    
-    -   It includes the functionality of `field.py`, but needs only a single image as input<br>
-        - returns NDVI and other indexes
-        - returns the metric and mask 
-        - returns a water mask         
-        - returns a fire mask to exclude region with active fire 
+ 
     
 
 ## Results
