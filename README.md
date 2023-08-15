@@ -4,7 +4,7 @@ It can be run on a personal computer with a GPU.
 
 ## Prerequisites
 
-Pytorch needs to be installed with CUDA
+Pytorch needs to be installed, preferably with CUDA 11
 
 ## Installation
 Create a conda environment with the libraries in `requirements.txt`
@@ -13,8 +13,8 @@ We have used python 3.10.11 and torch==2.0.1+cu117
 
 ## Method
 
-We use transfer learning to train a uNet model on the [Analytical Burned Area Index](#citation)
- (ABAI) for the given images. 
+We use transfer learning to train a uNet model on the [Analytical Burned Area Index](#references)
+ (ABAI) for the given images.  
 
 We can use the Sentinel 2 bands provided in the source files.
 
@@ -55,31 +55,30 @@ Prepares the .csv file to submit to the leaderboard
 ## Includes
 
 `show_indexes.py`
-Will visualise indexes on the pre- and post-fire scene.
+    -   Visualises indexes on the pre- and post-fire scene.
 
 `field.py`
-Class that loads a uuid from the sourcefile and for any pair of images:
-    - returns NDVI and other indexes
-    - returns index differences between pre- and post-fire scenes
-    - returns the metric and mask 
-    - returns a water mask         
-    - returns a fire mask to exclude region with active fire 
+    - Class that loads a uuid from the sourcefile and for any pair of images:
+        - returns NDVI and other indexes
+        - returns index differences between pre- and post-fire scenes
+        - returns the metric and mask 
+        - returns a water mask         
+        - returns a fire mask to exclude region with active fire 
 
 `plotters.py` 
-Class that loads a uuid from the sourcefile and plots 
-    - indexes such as NDVI,ABAI,BSI, ...
-    - water mask and fire mask
+    - Class that loads a uuid from the sourcefile and plots 
+        - indexes such as NDVI,ABAI,BSI, ...
+        - water mask and fire mask
 
 `make_prediction.py`
-Class that calculates the metric for a single image input and makes the prediction with the selected model
-
-It does everything that field.py does, but for one single image
-    - returns NDVI and other indexes
-    - returns the metric and mask 
-    - returns a water mask         
-    - returns a fire mask to exclude region with active fire 
+    -   Class that calculates the metric for a single image input and makes the prediction with the selected model
     
-
+    -   It includes the functionality of `field.py`, but needs only a single image as input<br>
+        - returns NDVI and other indexes
+        - returns the metric and mask 
+        - returns a water mask         
+        - returns a fire mask to exclude region with active fire 
+    
 
 ## Results
 
@@ -87,7 +86,7 @@ We can visually verify how our model performs by looking at the plots.
 
 For verfication we can run through the files with `verify_predictions.py`
 
-![verification fold 2 nr 47](./assets/verification_2_47.png)
+![verification fold 2 nr 47](./assets/verification_2_47.png)<br><br>
 On the left we see the original file in RGB<br>
 Next we see the result of our metric, yellow indicates burned land area<br>
 Next the resulting mask from our model<br>
