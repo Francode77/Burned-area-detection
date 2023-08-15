@@ -9,10 +9,7 @@ import albumentations as A
 from albumentations.pytorch import ToTensorV2
 from tqdm import tqdm
 import matplotlib.pyplot as plt
-
-from torchvision.io.image import read_image
-from torchvision.models.segmentation import fcn_resnet50, FCN_ResNet50_Weights
-from torchvision.transforms.functional import to_pil_image
+ 
 DEVICE        = "cuda" if torch.cuda.is_available() else "cpu"
 
 def seed_everything(seed):
@@ -30,6 +27,7 @@ class SegmentationDataset(Dataset):
         self.output_dir = output_dir
         self.transform  = transform
         
+        # Train/test split 80%
         if is_train == True:
             x = round(len(os.listdir(input_dir)) * .8)
             self.images = os.listdir(input_dir)[:x]
@@ -69,8 +67,8 @@ def get_loaders( inp_dir, mask_dir,batch_size,
     return train_loader, val_loader
 
 
-
-def predict_for_image(img, mask, device=DEVICE):
+# Calculates the number of correctly labeled pixels of an image
+def score_for_image(img, mask, device=DEVICE):
     img = img.to(device)
     mask = mask.to(device).unsqueeze(1)
     preds = torch.sigmoid(model(img))
@@ -78,10 +76,12 @@ def predict_for_image(img, mask, device=DEVICE):
 
     num_correct = (preds == mask).sum()
     num_pixels = torch.numel(preds)
+    
+    # Dice score 
     dice_score = (2 * (preds * mask).sum()) / (
             (preds + mask).sum() + 1e-7
     )
-
+    # Intersection over Union score
     intersection = (preds * mask).sum()
     union = (preds + mask).sum() - intersection
     iou_score = intersection / (union + 1e-7)
@@ -93,8 +93,10 @@ def check_accuracy(loader, model, device="cuda"):
     num_pixels = 0
     dice_score = 0
     iou_score = 0
-    model.eval()
     ignored = 0
+    
+    # Set to eval mode for inference
+    model.eval()
             
     with torch.no_grad():
         for img, mask in tqdm(loader):
@@ -102,9 +104,11 @@ def check_accuracy(loader, model, device="cuda"):
             num_zeros = (mask == 0).sum().item()
             num_non_zeros = mask.numel() - num_zeros 
 
-            num_correct_img, num_pixels_img, dice_score_img, iou_score_img = predict_for_image(img, mask, device)
+            num_correct_img, num_pixels_img, dice_score_img, iou_score_img = score_for_image(img, mask, device)
             num_correct += num_correct_img
             num_pixels += num_pixels_img
+            
+            # Check if any img has all zero
             if num_non_zeros!= 0:
                 dice_score += dice_score_img
                 iou_score += iou_score_img
@@ -116,30 +120,28 @@ def check_accuracy(loader, model, device="cuda"):
     )
     print(f"Dice score: {dice_score/(len(loader)-ignored)*100:.2f}")
     print(f"IoU score: {iou_score/(len(loader)-ignored)*100:.2f} ({ignored} ignored) ")
+    
+    # Set model back to train mode  
     model.train()
     
 def train_fn(loader, model, optimizer, loss_fn):
     loop = tqdm(loader)
 
     for batch_idx, (tensor_img, mask) in enumerate(loop):
-        #print (tensor_img.shape,'<<<') 
-        #tensor_img = torch.cat((tensor_img, tensor_img, tensor_img), dim=1)
-        
-        #tensor_img =  tensor_img.repeat(1, 3, 1, 1)
-        #print (tensor_img.shape,'<<<')
+ 
         tensor_img   = tensor_img.to(device=DEVICE)
         mask    = mask.float().unsqueeze(1).to(device=DEVICE)
 
-        # forward
+        # Forward pass
         predictions = model(tensor_img)
         loss = loss_fn(predictions, mask)
 
-        # backward
+        # Backward pass
         model.zero_grad()
         loss.backward()
         optimizer.step()
 
-        # update tqdm loop
+        # Update tqdm loop
         loop.set_postfix(loss=loss.item())          
         
 if __name__ == "__main__":
@@ -148,9 +150,9 @@ if __name__ == "__main__":
     TRAIN_INP_DIR = os.path.join('data','processed','training_scene')
     TRAIN_OUT_DIR = os.path.join('data','processed','training_truth')
     
-    MODEL_NAME = 'xception'
-    MODEL_NAME = 'deeplabv3_resnet50'
-    MODEL_NAME = 'resnet101'
+    #MODEL_NAME = 'xception'
+    #MODEL_NAME = 'deeplabv3_resnet50'
+    #MODEL_NAME = 'resnet101'
     MODEL_NAME = 'resnet50'
     
     LEARNING_RATE = 3e-4
@@ -159,6 +161,7 @@ if __name__ == "__main__":
     IMAGE_HEIGHT  = 512
     IMAGE_WIDTH   = 512  
     
+    # Data augmentation/transform
     train_transform = A.Compose(
         [
             A.Resize(height=IMAGE_HEIGHT, width=IMAGE_WIDTH),
@@ -179,14 +182,22 @@ if __name__ == "__main__":
     
     train_loader, val_loader = get_loaders( TRAIN_INP_DIR, TRAIN_OUT_DIR,
                                 BATCH_SIZE,  train_transform, val_transform)
+    
     inputs, masks = next(iter(train_loader))
+    
+    # Torch tensor shape
     print(inputs.shape)
+    
+    # How many files for training and validation?
     print (len(train_loader),len(val_loader))
+    
+    # Plot the input and the target (mask)
     _, ax = plt.subplots(1,2)
     ax[0].imshow(inputs[0].permute(1,2,0)[:,:,0])
     ax[1].imshow(masks[0])
     plt.show()
     
+    # Declaration of model architecture, loss function and optimizer   
     if MODEL_NAME == 'resnet50' or MODEL_NAME == 'resnet101' or MODEL_NAME == 'xception':
     
         model = smp.Unet(encoder_name=MODEL_NAME, in_channels=1, classes=1, activation=None).to(DEVICE)
@@ -198,8 +209,7 @@ if __name__ == "__main__":
         loss_fn   = nn.BCEWithLogitsLoss()
         optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
     
-        
-            
+    # Training loop
     for epoch in range(NUM_EPOCHS):
     
         print('########################## epoch: '+str(epoch))

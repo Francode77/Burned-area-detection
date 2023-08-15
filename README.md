@@ -10,12 +10,13 @@ Pytorch needs to be installed with CUDA
 Create a conda environment with the libraries in `requirements.txt`
 We have used python 3.10.11 and torch==2.0.1+cu117 
 
+
 ## Method
 
 We can use the Sentinel 2 bands provided in the source files.
 
 1. We mask areas with water using the NDWI index 
-2. We calculate the ABAI index, which shows a good detection of burned land areas 
+2. We calculate the ABAI(*) index, which shows a good detection of burned land areas 
 3. We detect areas where active fire occurs using the SAHM (Structural Analysis of Hydrologic Modeling) index and mask them out in the ABAI metric
 
 4. We use image augmentation 
@@ -25,6 +26,9 @@ We can use the Sentinel 2 bands provided in the source files.
 
 
 ## Usage
+
+Create folder 'data'
+ - Copy the file train_eval.hd5f to this folder
 
 run `preprocess_batch.py` 
 
@@ -81,3 +85,6 @@ Because the dataset has images where some burned areas have been contained in a 
 A better approach would thus be to train the model on the provided bands without first using a metric.
 
 Because the metric method proves reasonable results without this limitations, ie. if all burned areas would needed to be detected and not the ones from the labeled dataset, we were currently satisfied and didn't spend time and money on a more scientific approach. This would create a metric from the machine learning model's deep learning.
+
+
+(*) Wu, B.; Zheng, H.; Xu, Z.; Wu, Z.; Zhao, Y. Forest Burned Area Detection Using a Novel Spectral Index Based on Multi-Objective Optimization. Forests 2022, 13, 1787. [https://doi.org/10.3390/f13111787](https://doi.org/10.3390/f13111787)

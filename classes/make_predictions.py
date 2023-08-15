@@ -1,4 +1,3 @@
-from typing import Any, Union, Dict, Literal
 from numpy.typing import NDArray
 import torch
 import segmentation_models_pytorch as smp 
@@ -52,17 +51,15 @@ class MakePrediction:
         IMG_HEIGHT  = 512
         DEVICE      = "cuda" if torch.cuda.is_available() else "cpu"
         model_name  = model_name
-        MODEL_PATH  = f"{model_name}_trained_{IMG_HEIGHT}px.pt"
+        MODEL_PATH  = f"models/{model_name}_trained_{IMG_HEIGHT}px.pt"
         
         if model_name=='deeplabv3_resnet50':
             model_path = MODEL_PATH
 
             # Ensure your model architecture matches the one used during training
             model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', weights = 'DeepLabV3_ResNet50_Weights.DEFAULT').to(device=DEVICE)
-
         
-            # Update the model architecture if necessary
-            # For instance, if you have 2 classes instead of the default 21
+            # Update the model architecture for 1 classes instead of the default 21
             num_classes = 1
             model.classifier[4] = nn.Conv2d(256, num_classes, 1).to(device=DEVICE)
             model.aux_classifier[4] = nn.Conv2d(256, num_classes, 1).to(device=DEVICE)
@@ -70,10 +67,12 @@ class MakePrediction:
             model.backbone.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False).to(device=DEVICE)
             weight = model.backbone.conv1.weight.clone()
             aux_weight = model.aux_classifier[4].weight.clone()
+            
             with torch.no_grad():
                 model.backbone.conv1.weight[:, :3] = weight
                 model.backbone.conv1.weight[:, 0]  = torch.mean(weight, dim=1)
                 model.aux_classifier[4].weight[:, 0]= torch.mean(aux_weight, dim=1)
+                
             # Load the trained model weights
             model.load_state_dict(torch.load(model_path),strict=False)
             
@@ -93,6 +92,7 @@ class MakePrediction:
         img_tensor = transform_(metric).float()
         img_tensor = img_tensor.unsqueeze_(0)
         img_tensor = img_tensor.to(DEVICE)
+        
         if model_name=='deeplabv3_resnet50':
             result = ((torch.sigmoid(model(img_tensor.to(DEVICE))["out"])) >0.5).float()
         else:
@@ -150,9 +150,9 @@ class MakePrediction:
         SAHM_INDEX= ((B12.astype(float) - B11.astype(float)) / ((B12.astype(float) + B11.astype(float)))+ 1e-10)
  
         SAHM_mask = (SAHM_INDEX>0.4) | (B12>1)
-        B04[SAHM_mask] *= 20
-        B03[SAHM_mask] *= 1
-        B02[SAHM_mask] *= 1
+        B04[SAHM_mask] *= 20    # Red
+        B03[SAHM_mask] *= 1     # Green
+        B02[SAHM_mask] *= 1     # Blue
          
         water_mask = MakePrediction.get_water_mask(image) 
         mask = (water_mask == 1) 
@@ -172,7 +172,8 @@ class MakePrediction:
         return fire_mask
     
     def calculate_metric(image):
-        # Get the indices 
+        
+        # Get the index 
         ABAI = MakePrediction.get_abai(image)  
         metric = ABAI
         
@@ -184,7 +185,7 @@ class MakePrediction:
         fire_mask = MakePrediction.active_fire_mask(image)
         metric[fire_mask == 1] = metric.min()
         
-        # Standard deviation        
+        # Cap metric on standard deviation        
         metric[metric> 2.23 * np.std(metric)]= 2.23 * np.std(metric)
          
         # Normalize & standardize        
