@@ -13,16 +13,19 @@ We have used python 3.10.11 and torch==2.0.1+cu117
 
 ## Method
 
+We use transfer learning to train a uNet model on the [Analytical Burned Area Index](#citation)
+ (ABAI) for the given images. 
+
 We can use the Sentinel 2 bands provided in the source files.
 
-1. We mask areas with water using the NDWI index 
-2. We calculate the ABAI(*) index, which shows a good detection of burned land areas 
+1. We calculate the ABAI(*) index, which shows a good detection of burned land areas 
+2. We mask areas with water using the NDWI index 
 3. We detect areas where active fire occurs using the SAHM (Structural Analysis of Hydrologic Modeling) index and mask them out in the ABAI metric
 
 4. We use image augmentation 
-5. We use standard deviation to make the index more apparent across all images
+5. We use standard deviation to enhance the metric contrast
 
-6. We train a Resnet model on this metric by using Intersection over Union as score.
+6. We train a Resnet or a Deeplabv3 model on this metric by using Intersection over Union as score.
 
 
 ## Usage
@@ -34,36 +37,47 @@ run `preprocess_batch.py`
 
  - loads the images from the .hd5f files 
  - calculates the metric with the functions in the Field class 
- - writes the metric into a .tiff file (source)
- - writes the truth into a .tiff file (target)
-
+ - writes the metric as a .tiff file to `/data/processed/training_scene` (source)
+ - writes the truth as a .tiff file to `/data/processed/truth_scene` (target)
 
 run `preview_batch.py`
-Previews the images inside the .hdf5
+Previews the images inside the .hdf5 sourcefile
 
 run `train_model.py`
 Training of the model with pytorch using unet architecture (resnet, xception_net, and deeplab_v3)
 
 run `verify predictions.py`
-Verifies the prediction with the truth
+Visualizes the prediction with the truth mask by using the MakePrediction class functions
 
 run `create_submission.py`
 Prepares the .csv file to submit to the leaderboard
 
 ## Includes
 
-`field.py`
-Class with functions to 
-    - calculate NDVI and other indexes
-    - write the metric and mask 
-    - create a water mask         
-    - fire mask to exclude region with active fire 
+`show_indexes.py`
+Will visualise indexes on the pre- and post-fire scene.
 
-`plotter.py`
-Several functions to plot everything
+`field.py`
+Class that loads a uuid from the sourcefile and for any pair of images:
+    - returns NDVI and other indexes
+    - returns index differences between pre- and post-fire scenes
+    - returns the metric and mask 
+    - returns a water mask         
+    - returns a fire mask to exclude region with active fire 
+
+`plotters.py` 
+Class that loads a uuid from the sourcefile and plots 
+    - indexes such as NDVI,ABAI,BSI, ...
+    - water mask and fire mask
 
 `make_prediction.py`
-Calculates the metric for an image and makes the prediction by using the selected model
+Class that calculates the metric for a single image input and makes the prediction with the selected model
+
+It does everything that field.py does, but for one single image
+    - returns NDVI and other indexes
+    - returns the metric and mask 
+    - returns a water mask         
+    - returns a fire mask to exclude region with active fire 
     
 
 
@@ -86,5 +100,9 @@ A better approach would thus be to train the model on the provided bands without
 
 Because the metric method proves reasonable results without this limitations, ie. if all burned areas would needed to be detected and not the ones from the labeled dataset, we were currently satisfied and didn't spend time and money on a more scientific approach. This would create a metric from the machine learning model's deep learning.
 
+<a name="references"></a>
 
-(*) Wu, B.; Zheng, H.; Xu, Z.; Wu, Z.; Zhao, Y. Forest Burned Area Detection Using a Novel Spectral Index Based on Multi-Objective Optimization. Forests 2022, 13, 1787. [https://doi.org/10.3390/f13111787](https://doi.org/10.3390/f13111787)
+## References
+
+(*) This repository makes use of the ABAI index, as presented in the following paper:<br>
+ *Wu, B.; Zheng, H.; Xu, Z.; Wu, Z.; Zhao, Y. Forest Burned Area Detection Using a Novel Spectral Index Based on Multi-Objective Optimization. Forests 2022, 13, 1787. [https://doi.org/10.3390/f13111787](https://doi.org/10.3390/f13111787)*
