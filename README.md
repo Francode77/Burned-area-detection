@@ -6,7 +6,35 @@ It can be run on a personal computer with a GPU.
 
 Pytorch needs to be installed, preferably with CUDA 11
 
+We work with the dataset provided by this [HuggingFace](https://huggingface.co/spaces/competitions/ChaBuD-ECML-PKDD2023) competition.
+
+The dataset comprises patches of size 512x512 pixels collected from Sentinel-2
+ L2A satellite mission. All reported forest fires are located in California. 
+ For each area of interest, two images are provided: pre-fire acquisition and post-fire acquisition. 
+ Each image is composed of 12 different channels, collecting information from the visible spectrum, infrared and ultrablue.
+
+The dataset is split into:
+
+    - train set
+    - validation set
+    - hidden test set, for which ground truth labels are not disclosed.
+    
+The hdf5 file is structured in this way:
+`
+root
+|
+|- uuid_0: {"post_fire", "pre_fire", "mask"}
+| 
+|
+|- uuid_1: {"post_fire", "pre_fire", "mask"}
+|
+...
+`
+Each uuid have associated an attribute called fold.
+
+
 ## Installation
+
 Create a conda environment with the libraries in `requirements.txt`
 We have used python 3.10.11 and torch==2.0.1+cu117 
 
@@ -52,6 +80,7 @@ Visualizes the prediction with the truth mask by using the MakePrediction class 
 run `create_submission.py`
 Prepares the .csv file to submit to the leaderboard
 
+
 ## Includes
 
 `show_indexes.py`
@@ -75,7 +104,6 @@ Prepares the .csv file to submit to the leaderboard
 `make_prediction.py`
     -   Class that calculates the metric for a single image input and makes the prediction with the selected model
  
-    
 
 ## Results
 
@@ -89,6 +117,7 @@ Next we see the result of our metric, yellow indicates burned land area<br>
 Next the resulting mask from our model<br>
 On the right the truth mask<br>
 
+
 ## Limitations
 
 Because the dataset has images where some burned areas have been contained in a previous pass by Sentinel satellites, they are also detected but not valid as truth. This imposed a problem that we coudln't overcome using this method.
@@ -97,6 +126,7 @@ A better approach would thus be to train the model on the provided bands without
 Because the metric method proves reasonable results without this limitations, ie. if all burned areas would needed to be detected and not the ones from the labeled dataset, we were currently satisfied and didn't spend time and money on a more scientific approach. This would create a metric from the machine learning model's deep learning.
 
 <a name="references"></a>
+
 
 ## References
 
