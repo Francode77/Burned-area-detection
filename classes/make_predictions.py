@@ -56,7 +56,7 @@ class MakePrediction:
         if model_name=='deeplabv3_resnet50':
             model_path = MODEL_PATH
 
-            # Ensure your model architecture matches the one used during training
+            # Load model architecture 
             model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', weights = 'DeepLabV3_ResNet50_Weights.DEFAULT').to(device=DEVICE)
         
             # Update the model architecture for 1 classes instead of the default 21
@@ -88,7 +88,8 @@ class MakePrediction:
             
         transform_ = transforms.Compose([transforms.ToTensor(), 
             transforms.Resize((IMG_HEIGHT,IMG_HEIGHT),antialias=True)])
-        # get normalized image
+        
+        # Get normalized image
         img_tensor = transform_(metric).float()
         img_tensor = img_tensor.unsqueeze_(0)
         img_tensor = img_tensor.to(DEVICE)

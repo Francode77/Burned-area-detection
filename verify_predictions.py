@@ -8,12 +8,12 @@ from classes.datasource import DataSource
 #MODEL_NAME = 'deeplabv3_resnet50'
 MODEL_NAME = 'resnet50'
 
-BRIGHTNESS = 2
+BRIGHTNESS = 2.3
  
 # 'train_eval.hdf5'
 source_file=os.path.join('data','train_eval.hdf5')
-for fold in range (2,6):
-    for x in range (45,79):
+for fold in range (0,6):
+    for x in range (0,79):
         try: 
             print (fold, x)
             

@@ -6,8 +6,9 @@ import rasterio
 from rasterio import plot
 import matplotlib.colors as mcolors
 
+# Plots from image (np.ndarray)
 class Plotter:
-    def __init__(self,image):
+    def __init__(self,image : np.ndarray):
         self.image = image
         
     def plot_rgb(image, brightness=1):        
