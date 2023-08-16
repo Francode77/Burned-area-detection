@@ -5,8 +5,8 @@ from classes.datasource import DataSource
 
 #MODEL_NAME = 'xception'
 #MODEL_NAME = 'resnet101'
-#MODEL_NAME = 'deeplabv3_resnet50'
-MODEL_NAME = 'resnet50'
+MODEL_NAME = 'deeplabv3_resnet50'
+#MODEL_NAME = 'resnet50'
 
 BRIGHTNESS = 2.3
  

@@ -59,20 +59,16 @@ class MakePrediction:
             # Load model architecture 
             model = torch.hub.load('pytorch/vision:v0.10.0', 'deeplabv3_resnet50', weights = 'DeepLabV3_ResNet50_Weights.DEFAULT').to(device=DEVICE)
         
-            # Update the model architecture for 1 classes instead of the default 21
-            num_classes = 1
-            model.classifier[4] = nn.Conv2d(256, num_classes, 1).to(device=DEVICE)
-            model.aux_classifier[4] = nn.Conv2d(256, num_classes, 1).to(device=DEVICE)
-          
-            model.backbone.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False).to(device=DEVICE)
+            #summary(model)
             weight = model.backbone.conv1.weight.clone()
-            aux_weight = model.aux_classifier[4].weight.clone()
+            model.backbone.conv1 = nn.Conv2d(1, 64, kernel_size=7, stride=2, padding=3, bias=False).to(device=DEVICE)
+    
+            #print(model)
             
-            with torch.no_grad():
-                model.backbone.conv1.weight[:, :3] = weight
-                model.backbone.conv1.weight[:, 0]  = torch.mean(weight, dim=1)
-                model.aux_classifier[4].weight[:, 0]= torch.mean(aux_weight, dim=1)
-                
+            # Change architecture for 1 class
+            num_classes=1
+            model.classifier[4] = nn.Conv2d(256, num_classes, 1).to(DEVICE)
+            
             # Load the trained model weights
             model.load_state_dict(torch.load(model_path),strict=False)
             
