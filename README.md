@@ -19,7 +19,7 @@ The dataset is split into:
  - hidden test set, for which ground truth labels are not disclosed.
     
 The hdf5 file is structured in this way:
-    `
+     
     root
     |
     |- uuid_0: {"post_fire", "pre_fire", "mask"}
@@ -28,7 +28,7 @@ The hdf5 file is structured in this way:
     |- uuid_1: {"post_fire", "pre_fire", "mask"}
     |
     ...
-    `
+     
 Each uuid have associated an attribute called fold.
 
 
