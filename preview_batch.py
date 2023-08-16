@@ -8,15 +8,15 @@ files=['train_eval.hdf5','california_0.hdf5','california_1.hdf5','california_2.h
 for idx, file in enumerate(files):
     source_file=os.path.join('data',file) 
     try:
-        for fold in range (2,7):
+        for fold in range (0,7):
             try:
-                for x in range (45,99):
+                for x in range (0,99):
                     try:
                         print (source_file, fold, x)
                         
                         # Plot the post-fire image, scene 0
                         image = DataSource.get_image(source_file, fold, x, 0)        
-                        Plotter.plot_rgb(image=image, brightness=2)
+                        Plotter.plot_rgb(image=image, brightness=2.3)
                         
                         # Load the image pair and mask
                         see = Field(source_file, fold, x)
@@ -26,7 +26,7 @@ for idx, file in enumerate(files):
                         
                         # Plot the fire detection and metric
                         field_plotter.plot_fire()
-                        field_plotter.plot_metric(1)
+                        field_plotter.plot_metric(0)
                         
                         input("Press Enter to continue...")
                         

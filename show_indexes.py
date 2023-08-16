@@ -3,18 +3,17 @@ from classes.datasource import DataSource
 from classes.plotters import FieldPlotter, Plotter
  
 file_name = './data/train_eval.hdf5'
-fold = 2
-x = 46
+fold = 0
+x = 5
 
 # Load post-fire image from datasource
 image = DataSource.get_image(file_name, fold, x, 0)
-Plotter.plot_rgb(image=image,brightness=2)
 
 # Load object with uuid from datasource
 see = Field(file_name, fold, x)
 field_plotter = FieldPlotter(see)
 
-field_plotter.plot_metric(1)    # Plot our metric
+Plotter.plot_rgb(image=image,brightness=2.3) # Plot the RGB
 
 field_plotter.bi_plot_ndvi(0)   # Normalized Difference Vegetation
 field_plotter.bi_plot_gndvi(0)  # Green Normalized Difference Vegetation
@@ -32,3 +31,5 @@ field_plotter.bi_plot_NBRI_delta() # Post-fire - pre-fire NBRI
 
 field_plotter.plot_watermask() 
 field_plotter.plot_firemask()
+
+field_plotter.plot_metric(0)    # Plot our metric
