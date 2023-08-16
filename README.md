@@ -4,7 +4,9 @@ It can be run on a personal computer with a GPU.
 
 ## Prerequisites
 
-Pytorch needs to be installed, preferably with CUDA 11
+Pytorch needs to be installed, preferably with CUDA
+
+We have used Python 3.10.11 with Pytorch 2.0.1 and CUDA 11.7 
 
 We work with the dataset provided by this [HuggingFace](https://huggingface.co/spaces/competitions/ChaBuD-ECML-PKDD2023) competition.
 
@@ -35,7 +37,6 @@ Each uuid have associated an attribute called fold.
 ## Installation
 
 Create a conda environment with the libraries in `requirements.txt`
-We have used python 3.10.11 and torch==2.0.1+cu117 
 
 
 ## Method
