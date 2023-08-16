@@ -14,22 +14,21 @@ The dataset comprises patches of size 512x512 pixels collected from Sentinel-2
  Each image is composed of 12 different channels, collecting information from the visible spectrum, infrared and ultrablue.
 
 The dataset is split into:
-
-    - train set
-    - validation set
-    - hidden test set, for which ground truth labels are not disclosed.
+ - train set
+ - validation set
+ - hidden test set, for which ground truth labels are not disclosed.
     
 The hdf5 file is structured in this way:
-`
-root
-|
-|- uuid_0: {"post_fire", "pre_fire", "mask"}
-| 
-|
-|- uuid_1: {"post_fire", "pre_fire", "mask"}
-|
-...
-`
+    `
+    root
+    |
+    |- uuid_0: {"post_fire", "pre_fire", "mask"}
+    | 
+    |
+    |- uuid_1: {"post_fire", "pre_fire", "mask"}
+    |
+    ...
+    `
 Each uuid have associated an attribute called fold.
 
 
